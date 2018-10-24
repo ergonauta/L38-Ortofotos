@@ -25,37 +25,36 @@
 
     <script type="text/javascript">
 
+        function getUrlVars() {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
         var map = L.map('image2d').setView(new L.LatLng(0,0), 0);
 
-        var iVIS = L.tileLayer.deepzoom('img/4B_M4/', { 
-            width: 8196, 
-            height: 8196
-        });
+        //file:///D:/_ergonauta/_proyectos/Londres%2038/visor/src/01/index.html?m=4B_M4&an=8196&al=8196
+        var ruta = 'img/'+ getUrlVars()["m"]+'/';           // "img/4B_M4/"
+        var iAncho = getUrlVars()["an"];                    // 8196
+        var iAlto = getUrlVars()["al"];                     // 8196
 
-        /*var iFUV = L.tileLayer.deepzoom('img/fuv/fuv_files/', { 
-            width: 4915, 
-            height: 2594
-        });
 
-        var iRR = L.tileLayer.deepzoom('img/irr/irr_files/', { 
-            width: 4915, 
-            height: 2594
-        });*/
+        var iVIS = L.tileLayer.deepzoom(ruta, { 
+            width: iAncho, 
+            height: iAlto
+        });
 
 
         //iVIS.addTo(map);
         map.addLayer(iVIS);
-        /*map.addLayer(iFUV);
-        map.addLayer(iRR);*/
 
         // UI control layers
-        var baseLayers = {
-            "Visible": iVIS/*,
-            "UV": iFUV,
-            "IRR": iRR*/
+        /*var baseLayers = {
+            "Visible": iVIS
         };
-
-        L.control.layers(baseLayers).addTo(map);
+        L.control.layers(baseLayers).addTo(map);*/
 
 
 		// Restrict to bounds
@@ -67,6 +66,8 @@
         /*L.geoJSON(deterioros, {
             //style: myStyle
         }).addTo(map);*/
+
+        
 
     </script>
 </body>
