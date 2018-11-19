@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Visor Gigapixel</title>
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <link rel="stylesheet" href="libs/Control.Coordinates.css" />
+    <link rel="stylesheet" href="libs/font-awesome.css" />
+    <style type="text/css">
+        html, body, #image2d {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .leaflet-container {
+            background: #000;
+        }
+        .extra-marker i.fa-sm {
+            font-size: 9px;
+            margin-top: 25px;
+        }
+    </style>
+
+    <script type="text/javascript" src="js/leaflet.js"></script>
+    <script type="text/javascript" src="js/leaflet-deepzoom.js"></script>  
+    <script type="text/javascript" src="libs/Control.Coordinates.js"></script>
+
+    <link rel="stylesheet" href="libs/leaflet.extra-markers.min.css" />
+    <script type="text/javascript" src="libs/leaflet.extra-markers.min.js"></script>
+
+    <script type="text/javascript" src="js/datos.js"></script>
+</head>
+
+<body>
+    <div id="image2d"></div>
+    
+
+    <script type="text/javascript">
+
+        //var lHuellas = L.layerGroup();
+        var lhVp = L.layerGroup();
+        var lhAd = L.layerGroup();
+        var lhIf = L.layerGroup();
+        var lhIm = L.layerGroup();
+        var lhGr = L.layerGroup();
+
+
+        function getUrlVars() {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
+        var map = L.map('image2d', {
+            crs: L.CRS.Simple/*,
+            layers : [lHuellas]*/
+        }).setView(new L.LatLng(0,0), 0);
+
+        //file:///D:/_ergonauta/_proyectos/Londres%2038/visor/src/01/index.html?m=4B_M4&an=8196&al=8196
+        var ruta = 'img/'+ getUrlVars()["m"]+'/';           // "img/4B_M4/"
+        var iAncho = getUrlVars()["an"];                    // 8196
+        var iAlto = getUrlVars()["al"];                     // 8196
+        var iAltoN = Number(iAlto);
+
+
+        var iVIS = L.tileLayer.deepzoom(ruta, { 
+            width: iAncho, 
+            height: iAlto
+        });
+
+
+        //iVIS.addTo(map);
+        map.addLayer(iVIS);
+        //map.addLayer(lHuellas);
+        map.addLayer(lhVp);
+        map.addLayer(lhAd);
+        map.addLayer(lhIf);
+        map.addLayer(lhIm);
+        map.addLayer(lhGr);
+        L.layers = [iVIS, lhVp, lhAd, lhIf, lhIm, lhGr];
+ 
+        // UI control layers
+        /*var baseLayers = {
+            "Visible": iVIS
+        };
+        L.control.layers(baseLayers).addTo(map);*/
+
+        //map._zoom = 10;
+		// Restrict to bounds
+		//map.setMaxBounds(iVIS.options.bounds);
+		// Fit bounds
+		map.fitBounds(iVIS.options.bounds);
+
+
+
+        /*L.geoJSON(deterioros, {
+            //style: myStyle
+        }).addTo(map);*/
+
+        
+
+        // CONVERTIDORES
+        function cLatlon2PX(lat, lon) {
+            var x = lon*8192;
+            var y = iAltoN + lat  *8192;
+            //return x +', '+ y;
+            return {x:x, y:y};
+        }
+
+        function cPX2LatLon(x,y) {
+            var lat = (y -iAltoN) / 8192;
+            var lon = x/8192;
+            //return lat +', '+ lon;
+            return {lat:lat, lon:lon};
+        }
+
+        function cMM2PX(a,b,k) {
+            var x = a*10 / k;
+            var y = b*10 / k;
+            return {x:x, y:y};
+        }
+
+        // DEBUG COORDS
+        /*function onMapClick(e) {
+            //c.setCoordinates(e);
+            var res = cLatlon2PX(e.latlng.lat, e.latlng.lng);
+            console.log(res);
+        }
+        var c = new L.Control.Coordinates();
+        c.addTo(map);
+        map.on('click', onMapClick);*/
+
+        //var cords = cPX2LatLon(6227, 480);
+        //L.marker([cords.lat, cords.lon], {/*icon: greenIcon*/}).addTo(map);
+
+
+
+
+        for (var i = 0; i < datos.huellas.length; i++) {
+            // mm a px
+            var valPX = cMM2PX(datos.huellas[i].x, datos.huellas[i].y, datos.gsd);
+
+            // px local a global
+            var idC = datos.huellas[i].C;
+            var valC = datos.Cs[idC];
+
+            valPX.x = valPX.x + valC[0];
+            valPX.y = valPX.y + valC[1];
+
+            // px a LatLon
+            cords = cPX2LatLon(valPX.x, valPX.y);
+            //console.log(valPX);
+
+            // crea marker
+            //var m = L.marker([cords.lat, cords.lon], {/*icon: greenIcon*/});
+            var m;
+            var iconM = L.ExtraMarkers.icon({
+                extraClasses: 'fa-sm',
+                icon: 'fa-number',
+                number: '42',
+                iconColor: 'black',
+                shape: 'square',
+                markerColor: 'white'
+            });
+
+            // asigna a layer
+            var tipo = datos.huellas[i].tipo;
+            var id = datos.huellas[i].id;
+            iconM.options.number = id;
+
+            switch(tipo) {
+                case "Vp":
+                    iconM.options.markerColor = 'red';
+                    m = L.marker([cords.lat, cords.lon], {icon: iconM});
+                    m.addTo(lhVp);
+                    break;
+                case "Ad":
+                    iconM.options.markerColor = 'pink';
+                    m = L.marker([cords.lat, cords.lon], {icon: iconM});
+                    m.addTo(lhAd);
+                    break;
+                case "If":
+                    iconM.options.markerColor = 'blue';
+                    m = L.marker([cords.lat, cords.lon], {icon: iconM});
+                    m.addTo(lhIf);
+                    break;
+                case "Im":
+                    iconM.options.markerColor = 'orange';
+                    m = L.marker([cords.lat, cords.lon], {icon: iconM});
+                    m.addTo(lhIm);
+                    break;
+                case "Gr":
+                    iconM.options.markerColor = 'yellow';
+                    m = L.marker([cords.lat, cords.lon], {icon: iconM});
+                    m.addTo(lhGr);
+                    break;
+            }
+
+            // bind info
+            m.bindPopup(datos.huellas[i].id);
+        };
+
+
+
+        
+
+        var basemaps = {
+            "Ortofoto" : iVIS
+        }
+
+        var overlays = {
+            "Ventana Pictórica": lhVp,
+            "Adhesión" : lhAd,
+            "Interfacial" : lhIf,
+            "Impronta" : lhIm,
+            "Grafía" : lhGr
+        };
+
+        L.control.layers(basemaps, overlays).addTo(map);
+        
+
+    </script>
+</body>
+</html>
