@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Visor Gigapixel</title>
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <style type="text/css">
+        html, body, #image2d {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        .leaflet-container {
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="image2d"></div>
+    <script type="text/javascript" src="js/leaflet.js"></script>
+    <script type="text/javascript" src="js/leaflet-deepzoom.js"></script>  
+    
+
+    <script type="text/javascript">
+
+        function getUrlVars() {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
+        var map = L.map('image2d').setView(new L.LatLng(0,0), 0);
+
+        //file:///D:/_ergonauta/_proyectos/Londres%2038/visor/src/01/index.html?m=4B_M4&an=8196&al=8196
+        var ruta = 'img/'+ getUrlVars()["m"]+'/';           // "img/4B_M4/"
+        var iAncho = getUrlVars()["an"];                    // 8196
+        var iAlto = getUrlVars()["al"];                     // 8196
+
+
+        var iVIS = L.tileLayer.deepzoom(ruta, { 
+            width: iAncho, 
+            height: iAlto
+        });
+
+
+        //iVIS.addTo(map);
+        map.addLayer(iVIS);
+
+        // UI control layers
+        /*var baseLayers = {
+            "Visible": iVIS
+        };
+        L.control.layers(baseLayers).addTo(map);*/
+
+
+		// Restrict to bounds
+		//map.setMaxBounds(bounds);
+		// Fit bounds
+		map.fitBounds(iVIS.options.bounds);
+
+
+        /*L.geoJSON(deterioros, {
+            //style: myStyle
+        }).addTo(map);*/
+
+        
+
+    </script>
+</body>
+</html>
